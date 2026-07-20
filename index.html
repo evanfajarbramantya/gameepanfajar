@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Fireball Mage</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+background:#111;
+overflow:hidden;
+font-family:Arial;
+}
+
+canvas{
+display:block;
+margin:auto;
+background:linear-gradient(#1a0033,#000);
+border:3px solid #00ffff;
+}
+</style>
+
+</head>
+<body>
+
+<canvas id="game" width="900" height="500"></canvas>
+
+<script>
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+let score=0;
+let life=5;
+let gameOver=false;
+
+const player={
+x:420,
+y:420,
+w:60,
+h:60,
+speed:7
+};
+
+let bullets=[];
+let monsters=[];
+let keys={};
+
+document.addEventListener("keydown",e=>{
+
+keys[e.key]=true;
+
+if(e.code=="Space"){
+shoot();
+}
+
+});
+
+document.addEventListener("keyup",e=>{
+keys[e.key]=false;
+});
+
+function shoot(){
+
+bullets.push({
+x:player.x+25,
+y:player.y,
+w:10,
+h:20,
+speed:10
+});
+
+}
+
+function spawnMonster(){
+
+let size=40+Math.random()*25;
+
+monsters.push({
+
+x:Math.random()*(canvas.width-size),
+y:-size,
+w:size,
+h:size,
+speed:2+Math.random()*3
+
+});
+
+}
+
+setInterval(spawnMonster,900);
+
+function update(){
+
+if(gameOver)return;
+
+if(keys["a"]||keys["ArrowLeft"])
+player.x-=player.speed;
+
+if(keys["d"]||keys["ArrowRight"])
+player.x+=player.speed;
+
+if(player.x<0)player.x=0;
+if(player.x>canvas.width-player.w)
+player.x=canvas.width-player.w;
+
+bullets.forEach((b,i)=>{
+
+b.y-=b.speed;
+
+if(b.y<-20)
+bullets.splice(i,1);
+
+});
+
+monsters.forEach((m,mi)=>{
+
+m.y+=m.speed;
+
+if(m.y>canvas.height){
+
+life--;
+monsters.splice(mi,1);
+
+if(life<=0)
+gameOver=true;
+
+}
+
+bullets.forEach((b,bi)=>{
+
+if(
+b.x<m.x+m.w &&
+b.x+b.w>m.x &&
+b.y<m.y+m.h &&
+b.y+b.h>m.y
+){
+
+score++;
+
+bullets.splice(bi,1);
+monsters.splice(mi,1);
+
+}
+
+});
+
+if(
+
+player.x<m.x+m.w &&
+player.x+player.w>m.x &&
+player.y<m.y+m.h &&
+player.y+player.h>m.y
+
+){
+
+life--;
+monsters.splice(mi,1);
+
+if(life<=0)
+gameOver=true;
+
+}
+
+});
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="white";
+ctx.font="22px Arial";
+ctx.fillText("Score : "+score,20,30);
+ctx.fillText("Life : "+life,20,60);
+
+ctx.fillStyle="cyan";
+
+ctx.beginPath();
+ctx.arc(player.x+30,player.y+20,15,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillRect(player.x+20,player.y+30,20,30);
+
+ctx.fillStyle="orange";
+
+bullets.forEach(b=>{
+
+ctx.beginPath();
+ctx.arc(b.x,b.y,8,0,Math.PI*2);
+ctx.fill();
+
+});
+
+ctx.fillStyle="red";
+
+monsters.forEach(m=>{
+
+ctx.beginPath();
+ctx.arc(m.x+m.w/2,m.y+m.h/2,m.w/2,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="white";
+ctx.fillRect(m.x+10,m.y+15,5,5);
+ctx.fillRect(m.x+25,m.y+15,5,5);
+
+ctx.fillStyle="black";
+ctx.fillRect(m.x+15,m.y+28,15,4);
+
+ctx.fillStyle="red";
+
+});
+
+if(gameOver){
+
+ctx.fillStyle="rgba(0,0,0,.7)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.fillStyle="yellow";
+ctx.font="55px Arial";
+ctx.fillText("GAME OVER",260,220);
+
+ctx.font="30px Arial";
+ctx.fillText("Score : "+score,370,280);
+
+ctx.font="24px Arial";
+ctx.fillText("Refresh halaman untuk bermain lagi",230,340);
+
+}
+
+}
+
+function loop(){
+
+update();
+draw();
+
+requestAnimationFrame(loop);
+
+}
+
+loop();
+
+</script>
+
+</body>
+</html>
